@@ -58,7 +58,7 @@ class State():
     nb_patterns = Patterns.nb
     
     """ helper to configure the various actions """  
-    def __init__(self, name, button, note_on = -1,note_off = -1, note_toggle = -1, totoggle = False, velocity = False, alone = False, sync = [], channel = 1, in_port = control_port, reset_off = False, reset_on = False):
+    def __init__(self, name, button, note_on = -1,note_off = -1, note_toggle = -1, totoggle = False, velocity = False, alone = False, sync = [], channel = 1, in_port = control_port, reset_off = False, reset_on = False, restore_on = False):
         """
         name: we want some debug
         button: which button on the keyboard (CC value)
@@ -72,6 +72,7 @@ class State():
         channel: channel to use for output
         reset_on: should disable all pattern when state activated
         reset_off: should disable all pattern when state desactivated
+        restore_on: restore previous pattern on "on" (take over reset_on)
         in_port: which input produced midi message should appear to come from
         
         TODO: could use fixed velocity to differenciate instead of shift in notes
@@ -89,13 +90,15 @@ class State():
         self.in_port = in_port
         self.reset_on = reset_on
         self.reset_off = reset_off
+        self.restore_on = restore_on
         self.enable = False
         
         # pattern status for this state
         # FIXME: might not be reliable with the use of toggle
         self.patterns = [False] * Patterns.nb
+        # for restore
+        self.past_patterns = list(self.patterns)
     
-    # list of notes for each action
     def reset_state(self, unless=[]):
         """
         switch to off all patterns
@@ -110,7 +113,23 @@ class State():
             else:
                 print("keeps: " + str(p))
         return events
-
+        
+    
+    def restore_state(self):
+        """ creating events to restore state of previous patterns """
+        events = []
+        for p in range(0, State.nb_patterns):
+            # enable what is not yet enabled
+            if self.past_patterns[p] and not self.patterns[p]:
+                e = self.on(p)
+                if e != None:
+                    events.append(e)
+            elif not self.past_patterns[p] and self.patterns[p]:
+                e = self.off(p)
+                if e != None:
+                    events.append(e)
+        return events
+        
     def off(self, pattern):
         """ turn off the correspoding pattern, do nothing if not active """
         if not self.patterns[pattern]:
@@ -168,8 +187,20 @@ class State():
         return event
         
     def setEnable(self, flag):
-        """ set this state alive or not """
+        """ set this state alive or not, return events to execute"""
         self.enable = flag
+        # safe current patterns if case of restore
+        if not flag and self.restore_on:
+            self.past_patterns = list(self.patterns)
+            
+        # restore if needed
+        if flag and self.restore_on:
+            return self.restore_state()
+        # reset if needed
+        elif flag and self.reset_on:
+            return self.reset_state()
+        elif not flag and self.reset_off:
+            return self.reset_state()
         
     def isEnable(self):
         """ is it alive ? """
@@ -177,9 +208,9 @@ class State():
                         
         
 launch_state = State("launch", 3, note_toggle = 0, totoggle = True)
-midithrough_state = State("midi_through", 15, note_on = 32, note_off = 33, alone = True, velocity = True, reset_on = True, reset_off = True)
+midithrough_state = State("midi_through", 15, note_on = 32, note_off = 33, alone = True, velocity = True, restore_on = True, reset_off = True)
 #record_state = State("record", 14, note_on = 34, note_off = 35, alone = True, velocity = True, sync = [midithrough_state])
-record_state = State("record", 14, note_on = 34, note_off = 35, alone = True, velocity = True, reset_on = True, reset_off = True)
+record_state = State("record", 14, note_on = 34, note_off = 35, alone = True, velocity = True, restore_on = True, reset_off = True)
 
 
 # all activated states will trigger...
@@ -204,21 +235,14 @@ def toggle_state(event):
             return event
         print("State: " + state.name)
         
+        # toggle state and return associated events
         if event.value != 0:
             print("set to True")
-            state.setEnable(True)
-            # reset if needed
-            if state.reset_on:
-                return state.reset_state()
+            return state.setEnable(True)
+
         else:
            print("set to False")
-           state.setEnable(False)
-           # reset if needed
-           if state.reset_off:
-               return state.reset_state()
-            
-        # otherwise noting to return as midi event
-        return
+           return state.setEnable(False)
     
     # not captured here, continue to process event
     return event
