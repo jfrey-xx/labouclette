@@ -123,7 +123,7 @@ class State():
         if self.velocity:
             event = NoteOnEvent(self.in_port, self.channel, self.note_toggle, 0 + pattern)
         else:
-            event = NoteOnEvent(self.in_port, self.channel, self.note_toggle + pattern, 0 + pattern)
+            event = NoteOnEvent(self.in_port, self.channel, self.note_toggle + pattern, 127)
         return event
         
     def on(self, pattern):
@@ -133,7 +133,7 @@ class State():
         if self.velocity:
             event = NoteOnEvent(self.in_port, self.channel, self.note_on, 0 + pattern)
         else:
-            event = NoteOnEvent(self.in_port, self.channel, self.note_on + pattern, 0 + pattern)
+            event = NoteOnEvent(self.in_port, self.channel, self.note_on + pattern, 127)
         return event
         
     def setEnable(self, flag):
@@ -145,7 +145,7 @@ class State():
         return self.enable
                         
         
-launch_state = State("launch", 3, note_toggle = 1, totoggle = True)
+launch_state = State("launch", 3, note_toggle = 0, totoggle = True)
 midithrough_state = State("midi_through", 9, note_on = 32, note_off = 33, alone = True, velocity = True)
 record_state = State("record", 14, note_on = 34, note_off = 35, alone = True, velocity = True, sync = [midithrough_state])
 
@@ -187,15 +187,14 @@ def toggle_state(event):
        
 def toggle_pattern(event):
     """ might trigger commands if a special state is on-going """
-    for i in range(0, len(list_states)):
-        # select the first state
-        if list_states[i].isEnable():
-            state = list_states[i]
-            print("Current state: " + state.name)
-            # check if event of interest
-            if event.note in Patterns.notes:                
-                # only pass on note on
-                if event.type == NOTEON:
+    if event.type == NOTEON:
+        for i in range(0, len(list_states)):
+            # select the first state
+            if list_states[i].isEnable():
+                state = list_states[i]
+                print("Current state: " + state.name)
+                # check if event of interest
+                if event.note in Patterns.notes:                
                     print("Note On " + str(event.note) + " is of interest.")
                     pattern = Patterns.note2pattern(event.note)
                     print("Corresponding pattern: " + str(pattern))
@@ -210,17 +209,17 @@ def toggle_pattern(event):
                         events.append(state.activate(pattern))
                         return events
                         
-                elif event.type == NOTEOFF:
-                    print("Note Off " + str(event.note) + " was of interest.")
-                    return
-
+                    elif event.type == NOTEOFF:
+                        print("Note Off " + str(event.note) + " was of interest.")
+                        return
     # we got nothing, pass the event along
     return event
         
 # pass all event related to keyboard port
 out_keyboard_all = PortFilter(keyboard_port ) >> Print() >> Output('synth')
 # pass all event related to control to dedicated port, with specific channel
-out_command = PortFilter(control_port ) >> Print() >> Output('extra')
+out_command = PortFilter(control_port ) >> Print() >> Output('extra', 15)
+out_command_pad = PortFilter(control_port ) >> Print() >> Output('extra', 14)
 
 # meant to use pad for launching clips
 out_seq64_pad = PortFilter(keyboard_port ) >> Filter(NOTEON) >> Call(midi2ext_pad)
@@ -234,13 +233,13 @@ run(
         # this will switch the sampler to program 1, then route all events
         # to it
         #1:  process CC events for general state if any
-        1: Print() >> Process(toggle_state) >>  Print() >>  [
+        1: Channel(2) >> Print() >> Process(toggle_state) >>  Print() >>  [
             # created commands (with control port) get their output
-            Channel(15) >> out_command,
+            out_command,
             # process regular keyboard events, that could become controls depending on state of button
             PortFilter(keyboard_port) >>  Process(toggle_pattern) >> [
                 # again, new commands get their output
-                Channel(14) >> out_command,
+                out_command_pad,
                 out_keyboard_all
                 ]
             ],
