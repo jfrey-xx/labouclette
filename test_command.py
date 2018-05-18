@@ -114,7 +114,7 @@ class State():
     def off(self, pattern):
         """ turn off the correspoding pattern, do nothing if not active """
         if not self.patterns[pattern]:
-            print(self.name + " off: pattern " + str(pattern) + " arleady off!")
+            #print(self.name + " off: pattern " + str(pattern) + " arleady off!")
             return
             
         # don't bother is no available way to turn off
@@ -177,13 +177,13 @@ class State():
                         
         
 launch_state = State("launch", 3, note_toggle = 0, totoggle = True)
-midithrough_state = State("midi_through", 9, note_on = 32, note_off = 33, alone = True, velocity = True, reset_on = True)
+midithrough_state = State("midi_through", 15, note_on = 32, note_off = 33, alone = True, velocity = True, reset_on = True, reset_off = True)
 #record_state = State("record", 14, note_on = 34, note_off = 35, alone = True, velocity = True, sync = [midithrough_state])
 record_state = State("record", 14, note_on = 34, note_off = 35, alone = True, velocity = True, reset_on = True, reset_off = True)
 
 
 # all activated states will trigger...
-list_states = [launch_state, midithrough_state, record_state]
+list_states = [launch_state, record_state, midithrough_state]
 
 def toggle_state(event):
     """
