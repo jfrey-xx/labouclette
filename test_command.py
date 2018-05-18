@@ -39,6 +39,8 @@ class Patterns():
     # list of notes as in pattern order
     # NB: here we wil use pads from code25, mapped physically, should be octave 0
     notes = [48, 44, 40, 36, 49, 45, 41, 37, 50, 46, 42, 38, 51, 47, 43, 39] 
+    # corresponding keyboard keys for alternative way to launch that
+    keyboard = ['1','q','a','z','2','w','s','x','3','e','d','c','4','r','f','v','5','t','g','b','6','y','h','n','7','u','j','m','8','i','k',',']
     nb = len(notes)
     
     @staticmethod
@@ -58,7 +60,7 @@ class State():
     nb_patterns = Patterns.nb
     
     """ helper to configure the various actions """  
-    def __init__(self, name, button, note_on = -1,note_off = -1, note_toggle = -1, totoggle = False, velocity = False, alone = False, sync = [], channel = 1, in_port = control_port, reset_off = False, reset_on = False, restore_on = False):
+    def __init__(self, name, button, note_on = -1,note_off = -1, note_toggle = -1, totoggle = False, keyboard_toggle = False, velocity = False, alone = False, sync = [], channel = 1, in_port = control_port, reset_off = False, reset_on = False, restore_on = False):
         """
         name: we want some debug
         button: which button on the keyboard (CC value)
@@ -66,6 +68,7 @@ class State():
         note_off:  if >= 0, note for seq64 switch off (implies velocity == True)
         note_toggle: if >= 0, note for seq64 switch toggle with note on event(+0 to 32 if velocity == False)
         totoggle: if True should be toggled instead of swiched on
+        keyboard_toggle: if True, use computers keys to send command (implies totoggle, to be used with launch) -- TODO: more generic
         velocity: if True, use velocity value to set pattern. If False, will use note_* as a base and then add pattern number to it
         alone: if only one should be there at a time
         sync: list of states to synchronize with that
@@ -83,6 +86,7 @@ class State():
         self.note_off = note_off
         self.note_toggle = note_toggle
         self.totoggle = totoggle
+        self.keyboard_toggle = keyboard_toggle
         self.velocity = velocity
         self.alone = alone
         self.sync = sync
@@ -92,7 +96,9 @@ class State():
         self.reset_off = reset_off
         self.restore_on = restore_on
         self.enable = False
-        
+
+        if self.keyboard_toggle and not self.totoggle:
+            print(self.name + ": Warning, keyboard_toggle set without totoggle, won't be used")
         # pattern status for this state
         # FIXME: might not be reliable with the use of toggle
         self.patterns = [False] * Patterns.nb
@@ -116,7 +122,10 @@ class State():
         
     
     def restore_state(self):
-        """ creating events to restore state of previous patterns """
+        """
+        creating events to restore state of previous patterns
+        TODO: check if works with totoggle
+        """
         events = []
         for p in range(0, State.nb_patterns):
             # enable what is not yet enabled
@@ -164,6 +173,11 @@ class State():
         if self.note_toggle < 0:
             print("Error: state " + self.name + " has no toggle note")
             return
+        
+        if self.keyboard_toggle:
+            seq64_com(Patterns.keyboard[pattern])
+            return
+            
         if self.velocity:
             event = NoteOnEvent(self.in_port, self.channel, self.note_toggle, 0 + pattern)
         else:
@@ -207,7 +221,8 @@ class State():
         return self.enable
                         
         
-launch_state = State("launch", 3, note_toggle = 0, totoggle = True)
+# HOTFIX: these notes produce sounds, go through computer keyboard instead
+launch_state = State("launch", 3, note_toggle = 0, totoggle = True, keyboard_toggle = True)
 midithrough_state = State("midi_through", 15, note_on = 32, note_off = 33, alone = True, velocity = True, restore_on = True, reset_off = True)
 #record_state = State("record", 14, note_on = 34, note_off = 35, alone = True, velocity = True, sync = [midithrough_state])
 record_state = State("record", 14, note_on = 34, note_off = 35, alone = True, velocity = True, restore_on = True, reset_off = True)
