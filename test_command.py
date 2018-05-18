@@ -90,6 +90,10 @@ class State():
         self.reset_on = reset_on
         self.reset_off = reset_off
         self.enable = False
+        
+        # pattern status for this state
+        # FIXME: might not be reliable with the use of toggle
+        self.patterns = [False] * Patterns.nb
     
     # list of notes for each action
     def reset_state(self, unless=[]):
@@ -100,13 +104,19 @@ class State():
         events = []
         for p in range(0,State.nb_patterns):
             if p not in unless:
-                events.append(self.off(p))
+                e = self.off(p)
+                if e != None:
+                    events.append(e)
             else:
-                print("keeps: " + str(p))                
+                print("keeps: " + str(p))
         return events
 
     def off(self, pattern):
-        """ turn off the correspoding pattern """
+        """ turn off the correspoding pattern, do nothing if not active """
+        if not self.patterns[pattern]:
+            print(self.name + " off: pattern " + str(pattern) + " arleady off!")
+            return
+            
         # don't bother is no available way to turn off
         if self.velocity and self.note_off < 0:
             print("Error: state " + self.name + " use velocity but has no off note for off")
@@ -120,6 +130,8 @@ class State():
             event = NoteOnEvent(self.in_port, self.channel, self.note_off, 0 + pattern)
         else:
             event = NoteOffEvent(self.in_port, self.channel, self.note_on + pattern)
+        
+        self.patterns[pattern] = False
         return event
     
     def activate(self, pattern):
@@ -137,9 +149,14 @@ class State():
             event = NoteOnEvent(self.in_port, self.channel, self.note_toggle, 0 + pattern)
         else:
             event = NoteOnEvent(self.in_port, self.channel, self.note_toggle + pattern, 127)
+        self.patterns[pattern] = not self.patterns[pattern]
         return event
         
     def on(self, pattern):
+        """ turn on corresponding pattern, do nothing if already activated """
+        if self.patterns[pattern]:
+            print(self.name + " on: pattern " + str(pattern) + " arleady on!")
+            return
         if self.note_on < 0:
             print("Error: state " + self.name + " has no on note")
             return
@@ -147,6 +164,7 @@ class State():
             event = NoteOnEvent(self.in_port, self.channel, self.note_on, 0 + pattern)
         else:
             event = NoteOnEvent(self.in_port, self.channel, self.note_on + pattern, 127)
+        self.patterns[pattern] = True
         return event
         
     def setEnable(self, flag):
@@ -260,11 +278,17 @@ def toggle_pattern(event, only_first = True):
                 # ... and if should be reset for the other patterns
                 if syn.alone:
                     events += syn.reset_state(unless=[pattern])
-                events.append(syn.activate(pattern))
+                # maybe pattern already on and no new event...
+                syne = syn.activate(pattern)
+                if syne != None:
+                    events.append(syne)
             # reset this actual state if needed
             if state.alone:
                 events += state.reset_state(unless=[pattern])
-            events.append(state.activate(pattern))
+            # here again maybe pattern already on and no new event...
+            e = state.activate(pattern)
+            if e != None:
+                events.append(e)
         return events
     else:
         # we got a negative pattern number, error code
