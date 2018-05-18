@@ -9,6 +9,8 @@ from midi2ext import *
 # trying to cnontrol seq64 with code25
 # some inspiration from https://gist.oonnnoo.com/milkmiruku/2afb362b060b40f7575b8854220ad82e
 
+# FIXME: seq64 seems to handle poorly two states at the same time on same pattern (e.g. midi through and record, or launch clip that create sound with midi through), hence the sync mechanism and multiple states is not used
+
 # name of the input port which should be associated to transport controls
 control_port = "controls"
 # rest of keyboard
@@ -56,7 +58,7 @@ class State():
     nb_patterns = Patterns.nb
     
     """ helper to configure the various actions """  
-    def __init__(self, name, button, note_on = -1,note_off = -1, note_toggle = -1, totoggle = False, velocity = False, alone = False, sync = [], channel = 1, in_port = control_port):
+    def __init__(self, name, button, note_on = -1,note_off = -1, note_toggle = -1, totoggle = False, velocity = False, alone = False, sync = [], channel = 1, in_port = control_port, reset_off = False, reset_on = False):
         """
         name: we want some debug
         button: which button on the keyboard (CC value)
@@ -68,6 +70,8 @@ class State():
         alone: if only one should be there at a time
         sync: list of states to synchronize with that
         channel: channel to use for output
+        reset_on: should disable all pattern when state activated
+        reset_off: should disable all pattern when state desactivated
         in_port: which input produced midi message should appear to come from
         
         TODO: could use fixed velocity to differenciate instead of shift in notes
@@ -83,6 +87,8 @@ class State():
         self.sync = sync
         self.channel = channel
         self.in_port = in_port
+        self.reset_on = reset_on
+        self.reset_off = reset_off
         self.enable = False
     
     # list of notes for each action
@@ -153,16 +159,18 @@ class State():
                         
         
 launch_state = State("launch", 3, note_toggle = 0, totoggle = True)
-midithrough_state = State("midi_through", 9, note_on = 32, note_off = 33, alone = True, velocity = True)
+midithrough_state = State("midi_through", 9, note_on = 32, note_off = 33, alone = True, velocity = True, reset_on = True)
 #record_state = State("record", 14, note_on = 34, note_off = 35, alone = True, velocity = True, sync = [midithrough_state])
-record_state = State("record", 14, note_on = 34, note_off = 35, alone = True, velocity = True)
+record_state = State("record", 14, note_on = 34, note_off = 35, alone = True, velocity = True, reset_on = True, reset_off = True)
 
 
 # all activated states will trigger...
 list_states = [launch_state, midithrough_state, record_state]
 
 def toggle_state(event):
-    """ flip the state of buttons. """
+    """
+    flip the state of buttons.
+    """
     # if one of the used controls
     if event.type is CTRL:
         print("a button is pressed")
@@ -181,13 +189,15 @@ def toggle_state(event):
         if event.value != 0:
             print("set to True")
             state.setEnable(True)
+            # reset if needed
+            if state.reset_on:
+                return state.reset_state()
         else:
            print("set to False")
            state.setEnable(False)
-        
-        # reset if needed
-        if state.alone:
-            return state.reset_state()
+           # reset if needed
+           if state.reset_off:
+               return state.reset_state()
             
         # otherwise noting to return as midi event
         return
@@ -195,8 +205,11 @@ def toggle_state(event):
     # not captured here, continue to process event
     return event
        
-def toggle_pattern(event):
-    """ might trigger commands if a special state is on-going """
+def toggle_pattern(event, only_first = True):
+    """
+    might trigger commands if a special state is on-going
+    only_first: will deal with first pattern on the list, and that's it
+    """
 
     # we don't manage anything but notes
     if (event.type != NOTEON and event.type != NOTEOFF ):
@@ -212,7 +225,10 @@ def toggle_pattern(event):
     states = []
     for i in range(0, len(list_states)):
         if list_states[i].isEnable():
-            states.append(list_states[i])  
+            states.append(list_states[i])
+            if only_first:
+                print("Only consider first active pattern")
+                break
     
     # if empty list, just pass the note along
     if len(states) == 0:
