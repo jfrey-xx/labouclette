@@ -187,39 +187,37 @@ def toggle_state(event):
        
 def toggle_pattern(event):
     """ might trigger commands if a special state is on-going """
-    if event.type == NOTEON:
-        for i in range(0, len(list_states)):
-            # select the first state
-            if list_states[i].isEnable():
-                state = list_states[i]
-                print("Current state: " + state.name)
-                # check if event of interest
-                if event.note in Patterns.notes:                
-                    print("Note On " + str(event.note) + " is of interest.")
-                    pattern = Patterns.note2pattern(event.note)
-                    print("Corresponding pattern: " + str(pattern))
-                    events = []                    
-                    if pattern >= 0:
-                        # check if associated state
-                        for syn in state.sync:
-                            # ... and if should be reset
-                            if syn.alone:
-                                events += syn.reset_state()
-                            events.append(syn.activate(pattern))
-                        events.append(state.activate(pattern))
-                        return events
-                        
-                    elif event.type == NOTEOFF:
-                        print("Note Off " + str(event.note) + " was of interest.")
-                        return
+    for i in range(0, len(list_states)):
+        # select the first state
+        if list_states[i].isEnable():
+            state = list_states[i]
+            print("Current state: " + state.name)
+            # check if event of interest
+            if event.type == NOTEON and event.note in Patterns.notes:
+                print("Note On " + str(event.note) + " is of interest.")
+                pattern = Patterns.note2pattern(event.note)
+                print("Corresponding pattern: " + str(pattern))
+                events = []                    
+                if pattern >= 0:
+                    # check if associated state
+                    for syn in state.sync:
+                        # ... and if should be reset
+                        if syn.alone:
+                            events += syn.reset_state()
+                        events.append(syn.activate(pattern))
+                    events.append(state.activate(pattern))
+                    return events
+            # silently discard NOTEOFF    
+            elif event.type == NOTEOFF and event.note in Patterns.notes:
+                print("Note Off " + str(event.note) + " was of interest.")
+                return
     # we got nothing, pass the event along
     return event
         
 # pass all event related to keyboard port
 out_keyboard_all = PortFilter(keyboard_port ) >> Print() >> Output('synth')
 # pass all event related to control to dedicated port, with specific channel
-out_command = PortFilter(control_port ) >> Print() >> Output('extra', 15)
-out_command_pad = PortFilter(control_port ) >> Print() >> Output('extra', 14)
+out_command = PortFilter(control_port ) >> Print() >> Output('extra', 14)
 
 # meant to use pad for launching clips
 out_seq64_pad = PortFilter(keyboard_port ) >> Filter(NOTEON) >> Call(midi2ext_pad)
@@ -233,13 +231,13 @@ run(
         # this will switch the sampler to program 1, then route all events
         # to it
         #1:  process CC events for general state if any
-        1: Channel(2) >> Print() >> Process(toggle_state) >>  Print() >>  [
+        1: Print() >> Process(toggle_state) >>  [
             # created commands (with control port) get their output
             out_command,
             # process regular keyboard events, that could become controls depending on state of button
             PortFilter(keyboard_port) >>  Process(toggle_pattern) >> [
                 # again, new commands get their output
-                out_command_pad,
+                out_command,
                 out_keyboard_all
                 ]
             ],

@@ -151,7 +151,7 @@
 # solo (toggle, on, off):
 76 [0 0   0   0   0   0] [0 0   0   0   0   0] [0 0   0   0   0   0]
 # MIDI THRU (toggle, on, off):
-77 [0 0   0   0   0   0] [1 0 158  32   0  31] [1 0 158  33   0  31]
+77 [0 0   0   0   0   0] [1 0 157  32   0  31] [1 0 157  33   0  31]
 # bpm page up:
 78 [0 0   0   0   0   0] [0 0   0   0   0   0] [0 0   0   0   0   0]
 # bpm page down:
@@ -159,7 +159,7 @@
 # screen set by number:
 80 [0 0   0   0   0   0] [0 0   0   0   0   0] [0 0   0   0   0   0]
 # MIDI RECORD (toggle, on, off):
-81 [0 0   0   0   0   0] [1 0 158  34   0  31] [1 0 158  35   0  31]
+81 [0 0   0   0   0   0] [1 0 157  34   0  31] [1 0 157  35   0  31]
 # MIDI Quantized RECORD (toggle, on, off):
 82 [0 0   0   0   0   0] [0 0   0   0   0   0] [0 0   0   0   0   0]
 # reserved for expansion:
