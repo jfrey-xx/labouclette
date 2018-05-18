@@ -154,9 +154,11 @@ class State():
         
 launch_state = State("launch", 3, note_toggle = 0, totoggle = True)
 midithrough_state = State("midi_through", 9, note_on = 32, note_off = 33, alone = True, velocity = True)
-record_state = State("record", 14, note_on = 34, note_off = 35, alone = True, velocity = True, sync = [midithrough_state])
+#record_state = State("record", 14, note_on = 34, note_off = 35, alone = True, velocity = True, sync = [midithrough_state])
+record_state = State("record", 14, note_on = 34, note_off = 35, alone = True, velocity = True)
 
-# priority will be in this order for actions
+
+# all activated states will trigger...
 list_states = [launch_state, midithrough_state, record_state]
 
 def toggle_state(event):
@@ -195,35 +197,64 @@ def toggle_state(event):
        
 def toggle_pattern(event):
     """ might trigger commands if a special state is on-going """
+
+    # we don't manage anything but notes
+    if (event.type != NOTEON and event.type != NOTEOFF ):
+        print("not a note, pass through")
+        return event
+
+    # if event not of interest, pass it along
+    if (event.type == NOTEON or event.type == NOTEOFF ) and event.note not in Patterns.notes:
+        print("note not of interest, pass along")
+        return event
+    
+    # list of states to handle
+    states = []
     for i in range(0, len(list_states)):
-        # select the first state
         if list_states[i].isEnable():
-            state = list_states[i]
-            print("Current state: " + state.name)
-            # check if event of interest
-            if event.type == NOTEON and event.note in Patterns.notes:
-                print("Note On " + str(event.note) + " is of interest.")
-                pattern = Patterns.note2pattern(event.note)
-                print("Corresponding pattern: " + str(pattern))
-                events = []                    
-                if pattern >= 0:
-                    # check if associated state
-                    for syn in state.sync:
-                        # ... and if should be reset for the other patterns
-                        if syn.alone:
-                            events += syn.reset_state(unless=[pattern])
-                        events.append(syn.activate(pattern))
-                    # reset this actual state if needed
-                    if state.alone:
-                        events += state.reset_state(unless=[pattern])
-                    events.append(state.activate(pattern))
-                    return events
-            # silently discard NOTEOFF    
-            elif event.type == NOTEOFF and event.note in Patterns.notes:
-                print("Note Off " + str(event.note) + " was of interest.")
-                return
-    # we got nothing, pass the event along
-    return event
+            states.append(list_states[i])  
+    
+    # if empty list, just pass the note along
+    if len(states) == 0:
+        print("no activated state, pass along")
+        return event
+        
+    # we don't care about note off event from notes of interest, discard them (actions only on press)
+    if event.type == NOTEOFF and event.note in Patterns.notes:
+        print("discard Note Off " + str(event.note))
+        return
+    
+    # should have only case with NOTEON of interest here...
+    if event.type != NOTEON or event.note not in Patterns.notes:
+        print("error, should be note on in notes of interest!!")
+        return event
+        
+    # got some state, a note on of interest, build a set of events to return
+    events = []
+    
+    print("Note On " + str(event.note) + " is of interest.")
+    pattern = Patterns.note2pattern(event.note)
+    print("Corresponding pattern: " + str(pattern))
+    if pattern >= 0:
+        for state in states:
+            print("Process state: " + list_states[i].name)
+            # check if associated state
+            for syn in state.sync:
+                print("associated sync state: " + syn.name)
+                # ... and if should be reset for the other patterns
+                if syn.alone:
+                    events += syn.reset_state(unless=[pattern])
+                events.append(syn.activate(pattern))
+            # reset this actual state if needed
+            if state.alone:
+                events += state.reset_state(unless=[pattern])
+            events.append(state.activate(pattern))
+        return events
+    else:
+        # we got a negative pattern number, error code
+        print("error, bad pattern")
+        return event
+        
         
 # pass all event related to keyboard port
 out_keyboard_all = PortFilter(keyboard_port ) >> Print() >> Output('synth')
