@@ -19,7 +19,8 @@ config(
     backend='jack-rt',
     client_name='example',
     out_ports = ['synth', 'extra'],
-    in_ports = [(keyboard_port, 'system:midi_capture_1'), (control_port, 'system:midi_capture_4')],
+   # in_ports = [(keyboard_port, 'system:midi_capture_1'), (control_port, 'system:midi_capture_4')],
+    in_ports = [keyboard_port, control_port],
 
 )
 
@@ -85,11 +86,17 @@ class State():
         self.enable = False
     
     # list of notes for each action
-    def reset_state(self):
-        """ switch to off all patterns """
+    def reset_state(self, unless=[]):
+        """
+        switch to off all patterns
+        unless: list of pattern *not* to reset (e.g. will be turned on right after)
+        """
         events = []
         for p in range(0,State.nb_patterns):
-            events.append(self.off(p))
+            if p not in unless:
+                events.append(self.off(p))
+            else:
+                print("keeps: " + str(p))                
         return events
 
     def off(self, pattern):
@@ -179,6 +186,7 @@ def toggle_state(event):
         # reset if needed
         if state.alone:
             return state.reset_state()
+            
         # otherwise noting to return as midi event
         return
     
@@ -201,10 +209,13 @@ def toggle_pattern(event):
                 if pattern >= 0:
                     # check if associated state
                     for syn in state.sync:
-                        # ... and if should be reset
+                        # ... and if should be reset for the other patterns
                         if syn.alone:
-                            events += syn.reset_state()
+                            events += syn.reset_state(unless=[pattern])
                         events.append(syn.activate(pattern))
+                    # reset this actual state if needed
+                    if state.alone:
+                        events += state.reset_state(unless=[pattern])
                     events.append(state.activate(pattern))
                     return events
             # silently discard NOTEOFF    
