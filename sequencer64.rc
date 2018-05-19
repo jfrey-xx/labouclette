@@ -515,14 +515,16 @@
 
 # Last-used and currently-active directory:
 
-/home/jfrey/Downloads
+/home/jfrey/Music/mididings
 
 [recent-files]
 
 # Holds a list of the last few recently-loaded MIDI files.
 
-3
+5
 
+/home/jfrey/Music/mididings/test2.midi
+/home/jfrey/NSM Sessions/test_seq64/NSM Proxy.nDENG/midi.mid
 /home/jfrey/test2.midi
 /home/jfrey/Downloads/test.mid
 /home/jfrey/Download/tot.midi
