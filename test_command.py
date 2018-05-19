@@ -6,6 +6,8 @@ from mididings.extra.inotify import AutoRestart
 
 from midi2ext import *
 
+import remoteOSC
+
 # trying to cnontrol seq64 with code25
 # some inspiration from https://gist.oonnnoo.com/milkmiruku/2afb362b060b40f7575b8854220ad82e
 
@@ -60,7 +62,11 @@ class State():
     nb_patterns = Patterns.nb
     
     """ helper to configure the various actions """  
-    def __init__(self, name, button, note_on = -1,note_off = -1, note_toggle = -1, totoggle = False, keyboard_toggle = False, velocity = False, alone = False, sync = [], channel = 1, in_port = control_port, reset_off = False, reset_on = False, restore_on = False):
+    def __init__(self, name, button, note_on = -1,note_off = -1, note_toggle = -1, totoggle = False, keyboard_toggle = False,                 
+                 velocity = False, alone = False, sync = [], channel = 1, in_port = control_port,
+                 reset_off = False, reset_on = False, restore_on = False,
+                 remoteOSC = None
+                ):
         """
         name: we want some debug
         button: which button on the keyboard (CC value)
@@ -77,6 +83,7 @@ class State():
         reset_off: should disable all pattern when state desactivated
         restore_on: restore previous pattern on "on" (take over reset_on)
         in_port: which input produced midi message should appear to come from
+        remoteOSC: point to a RemoteOSC instance to send message when patterns changes (1 or 0), will use state name as address prefix to target pattern, e.g. launch_1, launch_2, etc.
         
         TODO: could use fixed velocity to differenciate instead of shift in notes
         """
@@ -95,6 +102,7 @@ class State():
         self.reset_on = reset_on
         self.reset_off = reset_off
         self.restore_on = restore_on
+        self.remoteOSC = remoteOSC
         self.enable = False
 
         if self.keyboard_toggle and not self.totoggle:
@@ -110,11 +118,13 @@ class State():
         switch to off all patterns
         unless: list of pattern *not* to reset (e.g. will be turned on right after)
         """
+        print(self.patterns)
         events = []
         for p in range(0,State.nb_patterns):
             if p not in unless:
                 e = self.off(p)
                 if e != None:
+                    print("off" + str(p))
                     events.append(e)
             else:
                 print("keeps: " + str(p))
@@ -138,6 +148,12 @@ class State():
                 if e != None:
                     events.append(e)
         return events
+      
+    def _set_pattern(self, pattern, flag):
+        """ toggle states of associated patterns, send OSC messages if needed """
+        self.patterns[pattern] = flag
+        if self.remoteOSC != None:
+            self.remoteOSC.command(self.name, pattern, flag)
         
     def off(self, pattern):
         """ turn off the correspoding pattern, do nothing if not active """
@@ -159,7 +175,7 @@ class State():
         else:
             event = NoteOffEvent(self.in_port, self.channel, self.note_on + pattern)
         
-        self.patterns[pattern] = False
+        self._set_pattern(pattern, False)
         return event
     
     def activate(self, pattern):
@@ -174,16 +190,19 @@ class State():
             print("Error: state " + self.name + " has no toggle note")
             return
         
+        event = None
+        
         if self.keyboard_toggle:
-            seq64_com(Patterns.keyboard[pattern])
-            return
-            
-        if self.velocity:
-            event = NoteOnEvent(self.in_port, self.channel, self.note_toggle, 0 + pattern)
+            seq64_com(Patterns.keyboard[pattern]) 
         else:
-            event = NoteOnEvent(self.in_port, self.channel, self.note_toggle + pattern, 127)
-        self.patterns[pattern] = not self.patterns[pattern]
+            if self.velocity:
+                event = NoteOnEvent(self.in_port, self.channel, self.note_toggle, 0 + pattern)
+            else:
+                event = NoteOnEvent(self.in_port, self.channel, self.note_toggle + pattern, 127)
+                
+        self._set_pattern(pattern, not self.patterns[pattern])
         return event
+
         
     def on(self, pattern):
         """ turn on corresponding pattern, do nothing if already activated """
@@ -197,7 +216,7 @@ class State():
             event = NoteOnEvent(self.in_port, self.channel, self.note_on, 0 + pattern)
         else:
             event = NoteOnEvent(self.in_port, self.channel, self.note_on + pattern, 127)
-        self.patterns[pattern] = True
+        self._set_pattern(pattern, True)
         return event
         
     def setEnable(self, flag):
@@ -219,14 +238,16 @@ class State():
     def isEnable(self):
         """ is it alive ? """
         return self.enable
-                        
+
+
+# give feedback to possible OSC ui
+remoteOSC = remoteOSC.RemoteOSC()                     
         
 # HOTFIX: these notes produce sounds, go through computer keyboard instead
-launch_state = State("launch", 3, note_toggle = 0, totoggle = True, keyboard_toggle = True)
-midithrough_state = State("midi_through", 15, note_on = 32, note_off = 33, alone = True, velocity = True, restore_on = True, reset_off = True)
+launch_state = State("launch", 3, note_toggle = 0, totoggle = True, keyboard_toggle = True, remoteOSC = remoteOSC)
+midithrough_state = State("through", 15, note_on = 32, note_off = 33, alone = True, velocity = True, restore_on = True, reset_off = True, remoteOSC = remoteOSC)
 #record_state = State("record", 14, note_on = 34, note_off = 35, alone = True, velocity = True, sync = [midithrough_state])
-record_state = State("record", 14, note_on = 34, note_off = 35, alone = True, velocity = True, restore_on = True, reset_off = True)
-
+record_state = State("record", 14, note_on = 34, note_off = 35, alone = True, velocity = True, restore_on = True, reset_off = True, remoteOSC = remoteOSC)
 
 # all activated states will trigger...
 list_states = [launch_state, record_state, midithrough_state]

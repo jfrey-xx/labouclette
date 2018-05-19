@@ -6,6 +6,7 @@ class RemoteOSC(liblo.ServerThread):
     def __init__(self, client_port=8000, server_port=9000, server=False):
         """
         will send message to OSC instance on server_port of local machine, and listen to client_port
+        NB: expect patterns indexed from 0 in input, output is indexed from 1
         """
         # init client
         print("Init client on localhost port " + str(client_port))
@@ -38,10 +39,15 @@ class RemoteOSC(liblo.ServerThread):
         self.command("through", pattern, flag)
         
     def command(self, address, pattern, flag):
-        """ send lower level OSC command to GUI """
+        """
+        Send lower level OSC command to GUI
+        pattern: number of the pattern, indexed from 0 (on server side it is indexed from 1)
+        """
         if not self.client_active:
             print("Client not init, won't send OSC message.")
             return
+        # fix index of pattern
+        pattern += 1
         msg = "/" + address + "_" + str(pattern)
         com = 1 if flag else 0
         print("Sending  value [" + str(com) + "] to " + msg)
@@ -50,6 +56,7 @@ class RemoteOSC(liblo.ServerThread):
     @liblo.make_method(None, None)
     def callback(self, path, args):
         """ a very generic callback when receive message, could be easier """
+        # NB: on remote pattern indexed from 1
         print("received OSC message " + str(path) + " with data: " + str(args))
         
 if __name__ == "__main__":
@@ -57,7 +64,7 @@ if __name__ == "__main__":
     remote = RemoteOSC(server=True)
     print("Launch patterns in turn")
     # plus one pattern to hacky turn off last one at the end
-    for i in range(1,34):
+    for i in range(0,33):
         remote.launch(i)
         remote.record(i)
         remote.through(i)
