@@ -1,17 +1,30 @@
  
 import liblo, time
 
-class RemoteOSC():
+class RemoteOSC(liblo.ServerThread):
     """ Using OSC to sync with a GUI """
-    def __init__(self, port=8000):
-        # send all messages to port 1234 on the local machine
+    def __init__(self, client_port=8000, server_port=9000, server=False):
+        """
+        will send message to OSC instance on server_port of local machine, and listen to client_port
+        """
+        # init client
+        print("Init client on localhost port " + str(client_port))
         try:
-            self.target = liblo.Address(port)
-            self.active = True
+            self.target = liblo.Address(client_port)
+            self.client_active = True
         except liblo.AddressError as err:
-            print("Error while opening OSC port " + str(port) + ": " + err)
-            self.actie = False
+            print("Error while opening OSC port " + str(client_port) + ": " + err)
+            self.client_active = False
     
+        # init server if option set
+        if server:
+            print("Init server on localhost port " + str(server_port))
+            try:
+                liblo.ServerThread.__init__(self, server_port)
+                self.start()
+            except liblo.ServerError as err:
+                print("Error while opening OSC port " + str(server_port) + ": " + err)
+            
     def launch(self, pattern, flag=True):
         """ signal on/off of a pattern """
         self.command("launch", pattern, flag)
@@ -26,14 +39,22 @@ class RemoteOSC():
         
     def command(self, address, pattern, flag):
         """ send lower level OSC command to GUI """
+        if not self.client_active:
+            print("Client not init, won't send OSC message.")
+            return
         msg = "/" + address + "_" + str(pattern)
         com = 1 if flag else 0
         print("Sending  value [" + str(com) + "] to " + msg)
         liblo.send(self.target, msg, com)
-
+        
+    @liblo.make_method(None, None)
+    def callback(self, path, args):
+        """ a very generic callback when receive message, could be easier """
+        print("received OSC message " + str(path) + " with data: " + str(args))
+        
 if __name__ == "__main__":
     print("Connect to OSC")
-    remote = RemoteOSC()
+    remote = RemoteOSC(server=True)
     print("Launch patterns in turn")
     # plus one pattern to hacky turn off last one at the end
     for i in range(1,34):
@@ -46,3 +67,5 @@ if __name__ == "__main__":
             remote.record(i-1, False)
             remote.through(i-1, False)
             time.sleep(0.1)
+
+    input("press enter to quit...\n")
