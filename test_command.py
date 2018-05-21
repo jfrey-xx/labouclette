@@ -65,7 +65,7 @@ class State():
     def __init__(self, name, button, note_on = -1,note_off = -1, note_toggle = -1, totoggle = False, keyboard_toggle = False,                 
                  velocity = False, alone = False, sync = [], channel = 1, in_port = control_port,
                  reset_off = False, reset_on = False, restore_on = False,
-                 remoteOSC = None
+                 remoteOSC = None, force_on = False, force_off = False
                 ):
         """
         name: we want some debug
@@ -84,7 +84,8 @@ class State():
         restore_on: restore previous pattern on "on" (take over reset_on)
         in_port: which input produced midi message should appear to come from
         remoteOSC: point to a RemoteOSC instance to send message when patterns changes (1 or 0), will use state name as address prefix to target pattern, e.g. launch_1, launch_2, etc.
-        
+        force_on: will set on event even if state already on
+        force_off: will set on event even if state already off
         TODO: could use fixed velocity to differenciate instead of shift in notes
         """
         self.name = name
@@ -103,6 +104,9 @@ class State():
         self.reset_off = reset_off
         self.restore_on = restore_on
         self.remoteOSC = remoteOSC
+        self.force_on = force_on
+        self.force_off = force_off
+        
         self.enable = False
 
         if self.keyboard_toggle and not self.totoggle:
@@ -156,9 +160,9 @@ class State():
             self.remoteOSC.command(self.name, pattern, flag)
         
     def off(self, pattern):
-        """ turn off the correspoding pattern, do nothing if not active """
-        if not self.patterns[pattern]:
-            #print(self.name + " off: pattern " + str(pattern) + " arleady off!")
+        """ turn off the correspoding pattern;; unless force_off, do nothing if not active """
+        if not self.patterns[pattern] and not self.force_off:
+            #print(self.name + " off: pattern " + str(pattern) + " already off!")
             return
             
         # don't bother is no available way to turn off
@@ -205,9 +209,9 @@ class State():
 
         
     def on(self, pattern):
-        """ turn on corresponding pattern, do nothing if already activated """
-        if self.patterns[pattern]:
-            print(self.name + " on: pattern " + str(pattern) + " arleady on!")
+        """ turn on corresponding pattern, unless force_on, do nothing if already activated """
+        if self.patterns[pattern] and not self.force_on:
+            #print(self.name + " on: pattern " + str(pattern) + " already on!")
             return
         if self.note_on < 0:
             print("Error: state " + self.name + " has no on note")
@@ -244,13 +248,16 @@ class State():
 remoteOSC = remoteOSC.RemoteOSC()                     
         
 # HOTFIX: these notes produce sounds, go through computer keyboard instead
-launch_state = State("launch", 3, note_toggle = 0, totoggle = True, keyboard_toggle = True, remoteOSC = remoteOSC)
+launch_state = State("launch", 3, note_toggle = 0, totoggle = True, keyboard_toggle = False, remoteOSC = remoteOSC)
 midithrough_state = State("through", 15, note_on = 32, note_off = 33, alone = True, velocity = True, restore_on = True, reset_off = True, remoteOSC = remoteOSC)
 #record_state = State("record", 14, note_on = 34, note_off = 35, alone = True, velocity = True, sync = [midithrough_state])
 record_state = State("record", 14, note_on = 34, note_off = 35, alone = True, velocity = True, restore_on = True, reset_off = True, remoteOSC = remoteOSC)
+# will set the recording to overwrite -- recording that should be set separatly
+reset_state = State("reset", 16, note_toggle = 36, note_on = 37, note_off = 38, totoggle = True, restore_on = True, reset_off = True, velocity = True)
+
 
 # all activated states will trigger...
-list_states = [launch_state, record_state, midithrough_state]
+list_states = [launch_state, record_state, midithrough_state, reset_state]
 
 def toggle_state(event):
     """
@@ -283,7 +290,7 @@ def toggle_state(event):
     # not captured here, continue to process event
     return event
        
-def toggle_pattern(event, only_first = True):
+def toggle_pattern(event, only_first = False):
     """
     might trigger commands if a special state is on-going
     only_first: will deal with first pattern on the list, and that's it
