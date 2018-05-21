@@ -163,7 +163,7 @@
 # MIDI Quantized RECORD (toggle, on, off):
 82 [0 0   0   0   0   0] [0 0   0   0   0   0] [0 0   0   0   0   0]
 # reserved for expansion:
-83 [0 0   0   0   0   0] [0 0   0   0   0   0] [0 0   0   0   0   0]
+83 [1 0 157  36   0  31] [1 0 157  37   0  31] [1 0 157  38   0  31]
 
 [mute-group]
 
@@ -509,7 +509,7 @@
 # this option set to 1 to save the configuration, as there is not a
 # user-interface control for it at present.
 
-1     # auto-save-options-on-exit support flag
+0     # auto-save-options-on-exit support flag
 
 [last-used-dir]
 
@@ -521,13 +521,9 @@
 
 # Holds a list of the last few recently-loaded MIDI files.
 
-5
+1
 
-/home/jfrey/Music/mididings/test2.midi
-/home/jfrey/NSM Sessions/test_seq64/NSM Proxy.nDENG/midi.mid
-/home/jfrey/test2.midi
-/home/jfrey/Downloads/test.mid
-/home/jfrey/Download/tot.midi
+/home/jfrey/Music/mididings/test4.midi
 
 # End of /home/jfrey/.config/sequencer64/sequencer64.rc
 #
