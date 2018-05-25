@@ -191,9 +191,9 @@ class State(object):
         elif not flag and self.reset_off:
             return self.reset_state()
         
-    def isEnable(self):
-        """ is it alive ? """
-        return self.enable
+    def isActive(self):
+        """ is it enabled and does it process patterns (i.e. note_on or note_toggle or note_off is set) """
+        return self.enable and (self.note_on >= 0 or self.note_off >= 0 or self.note_toggle >= 0)
         
 
     def process(self, pattern):
@@ -233,7 +233,7 @@ class Modifier(State):
         
     def _action(self, note, action_name):
         """ actually create the note """
-        print("Modifier " + self.name + " ation " + str(action_name))
+        print("Modifier " + self.name + " action " + str(action_name))
         if note > 0:
             return NoteOnEvent(self.in_port, self.channel, note, self.velocity)
         else:
@@ -295,7 +295,7 @@ def toggle_pattern(event, list_states, only_first = False, channel = 2):
     """
     might trigger commands if a special state is on-going
     list_states: list of states to check the event (and pattern) against
-    only_first: will deal with first pattern on the list, and that's it
+    only_first: will deal with first state on the list which accepts pattern, and that's it
     channel: which channel patterns should come from
     """
     # only deal with channel 2 (which should be pads)
@@ -316,7 +316,7 @@ def toggle_pattern(event, list_states, only_first = False, channel = 2):
     # list of states to handle
     states = []
     for i in range(0, len(list_states)):
-        if list_states[i].isEnable():
+        if list_states[i].isActive():
             states.append(list_states[i])
             if only_first:
                 print("Only consider first active pattern")
