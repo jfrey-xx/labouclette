@@ -290,11 +290,16 @@ def toggle_state(event):
     # not captured here, continue to process event
     return event
        
-def toggle_pattern(event, only_first = False):
+def toggle_pattern(event, only_first = False, channel = 2):
     """
     might trigger commands if a special state is on-going
     only_first: will deal with first pattern on the list, and that's it
+    channel: which channel patterns should come from
     """
+    # only deal with channel 2 (which should be pads)
+    if event.channel != channel:
+        print("not channel" + str(channel) + ", pass through")
+        return event
 
     # we don't manage anything but notes
     if (event.type != NOTEON and event.type != NOTEOFF ):
@@ -364,7 +369,7 @@ def toggle_pattern(event, only_first = False):
         
         
 # pass all event related to keyboard port
-out_keyboard_all = PortFilter(keyboard_port ) >> Print() >> Output('synth')
+out_keyboard_all = PortFilter(keyboard_port ) >> Print() >> Output('synth', 1)
 # pass all event related to control to dedicated port, with specific channel
 out_command = PortFilter(control_port ) >> Print() >> Output('extra', 14)
 
