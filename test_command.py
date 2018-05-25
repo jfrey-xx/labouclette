@@ -39,53 +39,6 @@ hook(
     # comes back with the previously active scene
     #MemorizeScene('scene.txt')
 )
-
-
-
-
-class Modifier():
-    """ juste trigger events associated to a button """
-    def __init__(self, name, button, note_on = -1, note_off = -1, note_toggle = -1, velocity = 127, channel = 1, in_port = control_port):
-        """
-        name: you guess it, name of the modifier        
-        button: which button on the keyboard (CC value)
-        note_on, note_off, note_toggle: note associated to each one of these actions
-        velocity: velocity to use for each action
-        channel: channel to use for output
-        in_port: which input produced midi message should appear to come from
-        """
-        self.name = name
-        self.button = button
-        self.note_on = note_on
-        self.note_off = note_off
-        self.note_toggle = note_toggle
-        self.velocity = velocity
-        self.channel = channel
-        self.in_port = in_port
-    
-    def _action(self, note, action_name):
-        """ actually create the note """
-        print("Modifier " + self.name + " ation " + str(action_name))
-        if note > 0:
-            return NoteOnEvent(self.in_port, self.channel, note, self.velocity)
-        else:
-            print("Error: associated note not set")
-        
-    def on(self):
-        """ send not associated to on """
-        return self._action(self.note_on, "note_on")
-    
-    def off(self):
-        """ send note associated to off """
-        return self._action(self.note_off, "note_off")
-    
-    def toggle(self):
-        """
-        send note associated to toggle
-        NB: not used at the moment
-        """
-        return self._action(self.note_toggle, "note_toggle")
-        
     
 # give feedback to possible OSC ui
 remoteOSC = remoteOSC.RemoteOSC()                     
@@ -104,42 +57,9 @@ list_states = [launch_state, record_state, midithrough_state, reset_state]
 
 # here modifiers, not associated to pads
 # will set the queue state -- recording that should be set separatly
-queue_modifier = Modifier("queue", 9, note_toggle = 39, note_on = 40, note_off = 41)
+queue_modifier = state.Modifier("queue", 9, note_activate = 40, note_deactivate = 41)
 # concatenate everything to check
 list_modifiers = [queue_modifier]
-
-
-def toggle_modifier(event):
-    """
-    generate events related to modifiers
-    """
-    # if one of the used controls
-    if event.type is CTRL:
-        print("a button is pressed")
-        print(event.ctrl)
-        
-        # retrieve state
-        modifier = None
-        for m in list_modifiers:
-            if m.button == event.ctrl:
-                modifier = m
-        if modifier == None:
-            print("Could not find corresponding modifier")
-            return event
-        print("Modifier: " + modifier.name)
-        
-        # toggle state and return associated events
-        if event.value != 0:
-            print("set to True")
-            return modifier.on()
-
-        else:
-           print("set to False")
-           return modifier.off()
-    
-    # not captured here, continue to process event
-    return event
-    
         
 # pass all event related to keyboard port
 out_keyboard_all = PortFilter(keyboard_port ) >> Print() >> Output('synth', 1)
@@ -158,7 +78,7 @@ run(
         # this will switch the sampler to program 1, then route all events
         # to it
         #1:  process CC events for general modifier, if any
-        1: Print() >> Process(toggle_modifier) >> [
+        1: Print() >> Process(state.toggle_state, list_modifiers) >> [
             # created commands from modifier (with control port) get their output
             out_command,
             # what was not used for modifier still might be processed, process CC events for general states, if any

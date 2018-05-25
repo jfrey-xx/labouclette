@@ -6,7 +6,7 @@ from midi2ext import seq64_com
   
 
 # Output port_name, channel, program
-class State():
+class State(object):
     # hom many patterns to deal with
     nb_patterns = Patterns.nb
     
@@ -58,6 +58,9 @@ class State():
         
         self.enable = False
 
+        # debug check for inheritance
+        print("Init state: " + self.name + " with button " + str(self.button))
+        
         if self.keyboard_toggle and not self.totoggle:
             print(self.name + ": Warning, keyboard_toggle set without totoggle, won't be used")
         # pattern status for this state
@@ -173,7 +176,7 @@ class State():
         return event
         
     def setEnable(self, flag):
-        """ set this state alive or not, return events to execute"""
+        """ set this state alive or not, return events to execute, if any"""
         self.enable = flag
         # safe current patterns if case of restore
         if not flag and self.restore_on:
@@ -208,6 +211,51 @@ class State():
         e = self.activate(pattern)
         if e != None:
             events.append(e)
+        
+        return events
+
+class Modifier(State):
+    """ special instance of state, that send itself a midi note on activation / deactivation """
+    
+    def __init__(self, *args, **kwargs):
+        """
+        init method with new keywords
+        note_activate, note_deactivate: note associated to each one of these actions (default -1)
+        velocity: velocity to use for each action (default 127)
+        """
+        # setting new keywods
+        self.note_activate = kwargs.pop('note_activate', -1)
+        self.note_deactivate = kwargs.pop('note_deactivate', -1)
+        self.velocity = kwargs.pop('velocity', 127)
+        # passing the rest to upper class
+        super(Modifier, self).__init__(*args, **kwargs)        
+        print("init modifier with activate " + str(self.note_activate) + " and deactivate " + str(self.note_deactivate))
+        
+    def _action(self, note, action_name):
+        """ actually create the note """
+        print("Modifier " + self.name + " ation " + str(action_name))
+        if note > 0:
+            return NoteOnEvent(self.in_port, self.channel, note, self.velocity)
+        else:
+            print("Error: associated note not set")
+        
+    def setEnable(self, flag):
+        """ overload State.setEnable to also send associated note """
+        # first inform upper class and gather results
+        events = super(Modifier, self).setEnable(flag)
+        
+        # if there was no events, create list
+        if events == None:
+            events = []
+            
+        # second, check associated note
+        if flag:
+            event = self._action(self.note_activate, "note_on")
+        else:
+            event = self._action(self.note_deactivate, "note_off")
+        
+        if event != None:
+            events.append(event)
         
         return events
 
