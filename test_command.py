@@ -61,11 +61,15 @@ list_states = [launch_state, record_state, midithrough_state, reset_state]
 glaunch_modifier = state.Modifier("glaunch", 17, totoggle = True, note_toggle = 64)
 # will set the group learn modifier
 glearn_modifier = state.Modifier("glearn", 18, note_activate = 46, note_deactivate = 47, totoggle = True, note_toggle = 64)
-# will set the queue  modifier
+# will set the queue (simple) modifier
 queue_modifier = state.Modifier("queue", 9, note_activate = 40, note_deactivate = 41)
+# will set the solo (simple) modifier
+replace_modifier = state.Modifier("replace", 19, note_activate = 49, note_deactivate = 50)
+# will set the snapshot (simple) modifier
+snapshot_modifier = state.Modifier("snapshot", 20, note_activate = 52, note_deactivate = 53)
 
 # concatenate everything to check -- patterns, if any associated, will only be processed by the first active. however  something like queue (only modifier, no notes associated to patterns) will not interfere
-list_modifiers = [glaunch_modifier, glearn_modifier, queue_modifier]
+list_modifiers = [glaunch_modifier, glearn_modifier, queue_modifier, replace_modifier, snapshot_modifier]
         
 # pass all event related to keyboard port
 out_keyboard_all = PortFilter(keyboard_port ) >> Print() >> Output('synth', 1)
