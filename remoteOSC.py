@@ -5,7 +5,7 @@ class RemoteOSC(liblo.ServerThread):
     """ Using OSC to sync with a GUI """
     def __init__(self, client_port=8000, server_port=9000, server=False):
         """
-        will send message to OSC instance on server_port of local machine, and listen to client_port
+        will send message to OSC instance on client_port of local machine, and listen to server_port
         NB: expect patterns indexed from 0 in input, output is indexed from 1
         """
         # init client
@@ -52,6 +52,16 @@ class RemoteOSC(liblo.ServerThread):
         com = 1 if flag else 0
         print("Sending  value [" + str(com) + "] to " + msg)
         liblo.send(self.target, msg, com)
+
+    def command_raw(self, address, msg):
+        """
+        Even lower level, send directly msg to address
+        """
+        if not self.client_active:
+            print("Client not init, won't send OSC message.")
+            return
+        print("Sending  value [" + str(msg) + "] to " + address)
+        liblo.send(self.target, address, msg)
         
     @liblo.make_method(None, None)
     def callback(self, path, args):
@@ -60,7 +70,12 @@ class RemoteOSC(liblo.ServerThread):
         print("received OSC message " + str(path) + " with data: " + str(args))
         
 if __name__ == "__main__":
-    print("Connect to OSC")
+    # test ardour connexion
+    remoteArdour = RemoteOSC(server=False, client_port=3819)
+    print("Toggle click")
+    remoteArdour.command_raw("/toggle_click", 1)
+    
+    print("Connect to OSC GUI")
     remote = RemoteOSC(server=True)
     print("Launch patterns in turn")
     # plus one pattern to hacky turn off last one at the end

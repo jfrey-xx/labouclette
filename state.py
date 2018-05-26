@@ -215,29 +215,36 @@ class State(object):
         return events
 
 class Modifier(State):
-    """ special instance of state, that send itself a midi note on activation / deactivation """
+    """ special instance of state, that send itself a midi note on activation / deactivation. Also possible to send an OSC message"""
     
     def __init__(self, *args, **kwargs):
         """
         init method with new keywords
         note_activate, note_deactivate: note associated to each one of these actions (default -1)
         velocity: velocity to use for each action (default 127)
+        osc_activate, osc_deactivate: address to send a signal to for each state (NB: remoteOSC should be set)
         """
         # setting new keywods
         self.note_activate = kwargs.pop('note_activate', -1)
-        self.note_deactivate = kwargs.pop('note_deactivate', -1)
+        self.note_deactivate = kwargs.pop('note_deactivate', -1)      
         self.velocity = kwargs.pop('velocity', 127)
+        self.osc_activate = kwargs.pop('osc_activate', None)
+        self.osc_deactivate = kwargs.pop('osc_deactivate', None)
+        
         # passing the rest to upper class
         super(Modifier, self).__init__(*args, **kwargs)        
         print("init modifier with activate " + str(self.note_activate) + " and deactivate " + str(self.note_deactivate))
         
-    def _action(self, note, action_name):
-        """ actually create the note """
+    def _action(self, note, action_name, osc_address):
+        """ actually create the note and send OSC message"""
         print("Modifier " + self.name + " action " + str(action_name))
         if note > 0:
             return NoteOnEvent(self.in_port, self.channel, note, self.velocity)
         else:
             print("Error: associated note not set")
+        
+        if self.remoteOSC != None and osc_address != None:
+            self.remoteOSC.command_raw(osc_address, 1)
         
     def setEnable(self, flag):
         """ overload State.setEnable to also send associated note """
@@ -250,9 +257,9 @@ class Modifier(State):
             
         # second, check associated note
         if flag:
-            event = self._action(self.note_activate, "note_on")
+            event = self._action(self.note_activate, "note_on", self.osc_activate)
         else:
-            event = self._action(self.note_deactivate, "note_off")
+            event = self._action(self.note_deactivate, "note_off", self.osc_deactivate)
         
         if event != None:
             events.append(event)

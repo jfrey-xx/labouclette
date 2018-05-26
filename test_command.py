@@ -41,13 +41,15 @@ hook(
 )
     
 # give feedback to possible OSC ui
-remoteOSC = remoteOSC.RemoteOSC()                     
+guiOSC = remoteOSC.RemoteOSC()     
+# connect to ardour OSC interface and its default OSC port
+ardourOSC = remoteOSC.RemoteOSC(client_port=3819)                
         
 # HOTFIX: these notes produce sounds, go through computer keyboard instead
-launch_state = state.State("launch", 3, note_toggle = 0, totoggle = True, keyboard_toggle = False, remoteOSC = remoteOSC)
-midithrough_state = state.State("through", 15, note_on = 32, note_off = 33, alone = True, velocity = True, restore_on = True, reset_off = True, remoteOSC = remoteOSC)
+launch_state = state.State("launch", 3, note_toggle = 0, totoggle = True, keyboard_toggle = False, remoteOSC = guiOSC)
+midithrough_state = state.State("through", 15, note_on = 32, note_off = 33, alone = True, velocity = True, restore_on = True, reset_off = True, remoteOSC = guiOSC)
 #record_state = State("record", 14, note_on = 34, note_off = 35, alone = True, velocity = True, sync = [midithrough_state])
-record_state = state.State("record", 14, note_on = 34, note_off = 35, alone = True, velocity = True, restore_on = True, reset_off = True, remoteOSC = remoteOSC)
+record_state = state.State("record", 14, note_on = 34, note_off = 35, alone = True, velocity = True, restore_on = True, reset_off = True, remoteOSC = guiOSC)
 # will set the recording to overwrite -- recording that should be set separatly
 reset_state = state.State("reset", 16, note_toggle = 36, note_on = 37, note_off = 38, totoggle = True, restore_on = True, reset_off = True, velocity = True)
 # all activated states will trigger...
@@ -71,7 +73,12 @@ list_modifiers = [glaunch_modifier, glearn_modifier, queue_modifier, replace_mod
 # then here deal with transport controls -- NB: we don't cate about "pause"
 play_control = state.Modifier("play", 94, note_activate = 55)
 stop_control = state.Modifier("stop", 93, note_activate = 56)
-list_TC = [play_control, stop_control]
+# these ones are special, sending messages to ardour
+click_control = state.Modifier("click", 95, remoteOSC = ardourOSC, osc_activate = "/toggle_click")
+gotostart_control = state.Modifier("goto_start", 91, remoteOSC = ardourOSC, osc_activate = "/goto_start")
+gotoend_control = state.Modifier("goto_end", 92, remoteOSC = ardourOSC, osc_activate = "/goto_end")
+
+list_TC = [play_control, stop_control, click_control, gotoend_control, gotostart_control]
         
 # pass all event related to keyboard port
 out_keyboard_all = PortFilter(keyboard_port ) >> Print() >> Output('synth', 1)

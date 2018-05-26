@@ -31,7 +31,6 @@ def seq64_com(key):
     """ send key to seq64, relies on external xdootool """
     # name of the seq64 window, to be used with xdotool -- note the "ppqn", trick to get the window of interest
     seq64_wname = 'seq64 .* ppqn'
-    command = "search --name " + seq64_wname + " key --clearmodifiers " + key
     call(["xdotool", "search", "--name", seq64_wname, "key",  "--clearmodifiers", key])
 
 
