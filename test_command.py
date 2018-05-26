@@ -50,13 +50,11 @@ midithrough_state = state.State("through", 15, note_on = 32, note_off = 33, alon
 record_state = state.State("record", 14, note_on = 34, note_off = 35, alone = True, velocity = True, restore_on = True, reset_off = True, remoteOSC = remoteOSC)
 # will set the recording to overwrite -- recording that should be set separatly
 reset_state = state.State("reset", 16, note_toggle = 36, note_on = 37, note_off = 38, totoggle = True, restore_on = True, reset_off = True, velocity = True)
-
 # all activated states will trigger...
 list_states = [launch_state, record_state, midithrough_state, reset_state]
 
 
 # here modifiers, not associated to pads
-
 # hack: this modifier is just to capture pad actions, will not actually "modify" anything
 glaunch_modifier = state.Modifier("glaunch", 17, totoggle = True, note_toggle = 64)
 # will set the group learn modifier
@@ -67,9 +65,13 @@ queue_modifier = state.Modifier("queue", 9, note_activate = 40, note_deactivate 
 replace_modifier = state.Modifier("replace", 19, note_activate = 49, note_deactivate = 50)
 # will set the snapshot (simple) modifier
 snapshot_modifier = state.Modifier("snapshot", 20, note_activate = 52, note_deactivate = 53)
-
 # concatenate everything to check -- patterns, if any associated, will only be processed by the first active. however  something like queue (only modifier, no notes associated to patterns) will not interfere
 list_modifiers = [glaunch_modifier, glearn_modifier, queue_modifier, replace_modifier, snapshot_modifier]
+
+# then here deal with transport controls -- NB: we don't cate about "pause"
+play_control = state.Modifier("play", 94, note_activate = 55)
+stop_control = state.Modifier("stop", 93, note_activate = 56)
+list_TC = [play_control, stop_control]
         
 # pass all event related to keyboard port
 out_keyboard_all = PortFilter(keyboard_port ) >> Print() >> Output('synth', 1)
@@ -87,24 +89,28 @@ run(
         # scene 1: play piano.
         # this will switch the sampler to program 1, then route all events
         # to it
-        #1:  process CC events for general modifier, if any
-        1: Print() >> Process(state.toggle_state, list_modifiers) >> [
-            # created commands from modifier (with control port) get their output
-            out_command,
-            # what was not used for modifier still might be processed, process CC events for general states, if any
-             PortFilter(keyboard_port) >> Process(state.toggle_state, list_states) >>  [
-                # created commands (with control port) get their output
+        1: Print() >> [
+            # we might get info from transport control port, that should be commands
+            PortFilter(control_port) >> Process(state.toggle_state, list_TC, checkTC = True) >> out_command,
+            # regular input input, process CC events for general modifier, if any
+            PortFilter(keyboard_port) >> Process(state.toggle_state, list_modifiers) >> [
+                # created commands from modifier (with control port) get their output
                 out_command,
-                # process regular keyboard events, that could become controls depending on state of button, first for modifiers -- for which only one is allowed at a time
-                PortFilter(keyboard_port) >>  Process(state.toggle_pattern, list_modifiers, only_first = True) >> [
-                    # output pattern for modifier
+                # what was not used for modifier still might be processed, process CC events for general states, if any
+                 PortFilter(keyboard_port) >> Process(state.toggle_state, list_states) >>  [
+                    # created commands (with control port) get their output
                     out_command,
-                    # process regular keyboard events, that could become controls depending on state of button, first for modifiers
-                    PortFilter(keyboard_port) >>  Process(state.toggle_pattern, list_states) >> [
-                        # again, new commands get their output
+                    # process regular keyboard events, that could become controls depending on state of button, first for modifiers -- for which only one is allowed at a time
+                    PortFilter(keyboard_port) >>  Process(state.toggle_pattern, list_modifiers, only_first = True) >> [
+                        # output pattern for modifier
                         out_command,
-                        out_keyboard_all
-                        ]
+                        # process regular keyboard events, that could become controls depending on state of button, first for modifiers
+                        PortFilter(keyboard_port) >>  Process(state.toggle_pattern, list_states) >> [
+                            # again, new commands get their output
+                            out_command,
+                            out_keyboard_all
+                            ]
+                        ],
                     ],
                 ],
             ],

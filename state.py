@@ -259,34 +259,46 @@ class Modifier(State):
         
         return events
 
-def toggle_state(event, list_states):
+def toggle_state(event, list_states, checkTC = False):
     """
     flip the state of buttons.
     list_states: list of states to check the event against
+    checkTC: if True, then will look for NOTEON event instead of CC, as is it what transport controls will look like -- will discard any even if not processed!
     """
     # if one of the used controls
-    if event.type is CTRL:
-        print("a button is pressed")
-        print(event.ctrl)
+    if event.type is CTRL or checkTC and event.type is NOTEON:
+        if checkTC:
+            print("a TC is pressed")
+            print(event.note)
+        else:
+            print("a button is pressed")
+            print(event.ctrl)
         
         # retrieve state
         state = None
         for s in list_states:
-            if s.button == event.ctrl:
+            if (checkTC and s.button == event.note) or (not checkTC and s.button == event.ctrl):
                 state = s
         if state == None:
             print("Could not find corresponding state")
-            return event
+            # in case of TC we really don't want to process it
+            if checkTC:
+                return
+            else:
+                return event
         print("State: " + state.name)
         
         # toggle state and return associated events
-        if event.value != 0:
+        if (checkTC and event.velocity != 0) or (not checkTC and event.value != 0):
             print("set to True")
             return state.setEnable(True)
 
         else:
            print("set to False")
            return state.setEnable(False)
+    # note TC could also get noteoff, we want to discard that
+    elif checkTC and event.type is NOTEOFF:
+        return
     
     # not captured here, continue to process event
     return event

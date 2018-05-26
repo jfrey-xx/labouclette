@@ -145,7 +145,7 @@
 # Extended MIDI controls:
 
 # start playback (pause, start, stop):
-74 [0 0   0   0   0   0] [0 0   0   0   0   0] [0 0   0   0   0   0]
+74 [1 0 157  54   0  127] [1 0 157  55   0  127] [1 0 157  56   0  127]
 # performance record:
 75 [0 0   0   0   0   0] [0 0   0   0   0   0] [0 0   0   0   0   0]
 # solo (toggle, on, off):
