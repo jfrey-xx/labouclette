@@ -1,44 +1,44 @@
 <Cabbage>
-form caption("OSCSend_Multi"), size(890, 420), pluginid("oscsend_multi"), guirefresh(10)
+form caption("OSCSendMulti"), size(890, 420), pluginid("oscsendmulti"), guirefresh(10)
 
-rslider bounds(10, 10, 100, 100), channel("knob1_1"), colour(255, 0, 0, 255), range(-5, 5, 0, 1, 0.001) increment(0.001) text("ch1")
-rslider bounds(100, 10, 100, 100),channel("knob1_2"), colour(255, 0, 0, 255), range(-5, 5, 0, 1, 0.001) increment(0.001) text("ch2")
-rslider bounds(200, 10, 100, 100), channel("knob1_3"), colour(255, 0, 0, 255), range(-5, 5, 0, 1, 0.001) increment(0.001) text("ch3")
-rslider bounds(300, 10, 100, 100), channel("knob1_4"), colour(255, 0, 0, 255), range(-5, 5, 0, 1, 0.001) increment(0.001) text("ch4")
-rslider bounds(400, 10, 100, 100), channel("knob1_5"), colour(255, 0, 0, 255), range(-5, 5, 0, 1, 0.001) increment(0.001) text("ch5")
-rslider bounds(500, 10, 100, 100), channel("knob1_6"), colour(255, 0, 0, 255), range(-5, 5, 0, 1, 0.001) increment(0.001) text("ch6")
-rslider bounds(600, 10, 100, 100), channel("knob1_7"), colour(255, 0, 0, 255), range(-5, 5, 0, 1, 0.001) increment(0.001) text("ch7")
-rslider bounds(700, 10, 100, 100), channel("knob1_8"), colour(255, 0, 0, 255), range(-5, 5, 0, 1, 0.001) increment(0.001) text("ch8")
+rslider bounds(10, 10, 100, 100), channel("knob1_1"), colour(255, 0, 0, 255), range(0, 10, 0, 1, 0.001) increment(0.001) text("ch1")
+rslider bounds(100, 10, 100, 100),channel("knob1_2"), colour(255, 0, 0, 255), range(0, 10, 0, 1, 0.001) increment(0.001) text("ch2")
+rslider bounds(200, 10, 100, 100), channel("knob1_3"), colour(255, 0, 0, 255), range(0, 10, 0, 1, 0.001) increment(0.001) text("ch3")
+rslider bounds(300, 10, 100, 100), channel("knob1_4"), colour(255, 0, 0, 255), range(0, 10, 0, 1, 0.001) increment(0.001) text("ch4")
+rslider bounds(400, 10, 100, 100), channel("knob1_5"), colour(255, 0, 0, 255), range(0, 10, 0, 1, 0.001) increment(0.001) text("ch5")
+rslider bounds(500, 10, 100, 100), channel("knob1_6"), colour(255, 0, 0, 255), range(0, 10, 0, 1, 0.001) increment(0.001) text("ch6")
+rslider bounds(600, 10, 100, 100), channel("knob1_7"), colour(255, 0, 0, 255), range(0, 10, 0, 1, 0.001) increment(0.001) text("ch7")
+rslider bounds(700, 10, 100, 100), channel("knob1_8"), colour(255, 0, 0, 255), range(0, 10, 0, 1, 0.001) increment(0.001) text("ch8")
 nslider bounds(810, 20, 50, 50), channel("port1"), range(0, 65535, 7000, 1, 1), velocity(50), text("port_1"), fontcolour(255, 255, 255, 255), colour(200, 0, 0, 255) 
 
-rslider bounds(10, 110, 100, 100), channel("knob2_1"), colour(0, 255, 0, 255), range(-5, 5, 0, 1, 0.001) increment(0.001) text("ch1")
-rslider bounds(100, 110, 100, 100),channel("knob2_2"), colour(0, 255, 0, 255), range(-5, 5, 0, 1, 0.001) increment(0.001) text("ch2")
-rslider bounds(200, 110, 100, 100), channel("knob2_3"), colour(0, 255, 0, 255), range(-5, 5, 0, 1, 0.001) increment(0.001) text("ch3")
-rslider bounds(300, 110, 100, 100), channel("knob2_4"), colour(0, 255, 0, 255), range(-5, 5, 0, 1, 0.001) increment(0.001) text("ch4")
-rslider bounds(400, 110, 100, 100), channel("knob2_5"), colour(0, 255, 0, 255), range(-5, 5, 0, 1, 0.001) increment(0.001) text("ch5")
-rslider bounds(500, 110, 100, 100), channel("knob2_6"), colour(0, 255, 0, 255), range(-5, 5, 0, 1, 0.001) increment(0.001) text("ch6")
-rslider bounds(600, 110, 100, 100), channel("knob2_7"), colour(0, 255, 0, 255), range(-5, 5, 0, 1, 0.001) increment(0.001) text("ch7")
-rslider bounds(700, 110, 100, 100), channel("knob2_8"), colour(0, 255, 0, 255), range(-5, 5, 0, 1, 0.001) increment(0.001) text("ch8")
+rslider bounds(10, 110, 100, 100), channel("knob2_1"), colour(0, 255, 0, 255), range(0, 10, 0, 1, 0.001) increment(0.001) text("ch1")
+rslider bounds(100, 110, 100, 100),channel("knob2_2"), colour(0, 255, 0, 255), range(0, 10, 0, 1, 0.001) increment(0.001) text("ch2")
+rslider bounds(200, 110, 100, 100), channel("knob2_3"), colour(0, 255, 0, 255), range(0, 10, 0, 1, 0.001) increment(0.001) text("ch3")
+rslider bounds(300, 110, 100, 100), channel("knob2_4"), colour(0, 255, 0, 255), range(0, 10, 0, 1, 0.001) increment(0.001) text("ch4")
+rslider bounds(400, 110, 100, 100), channel("knob2_5"), colour(0, 255, 0, 255), range(0, 10, 0, 1, 0.001) increment(0.001) text("ch5")
+rslider bounds(500, 110, 100, 100), channel("knob2_6"), colour(0, 255, 0, 255), range(0, 10, 0, 1, 0.001) increment(0.001) text("ch6")
+rslider bounds(600, 110, 100, 100), channel("knob2_7"), colour(0, 255, 0, 255), range(0, 10, 0, 1, 0.001) increment(0.001) text("ch7")
+rslider bounds(700, 110, 100, 100), channel("knob2_8"), colour(0, 255, 0, 255), range(0, 10, 0, 1, 0.001) increment(0.001) text("ch8")
 nslider bounds(810, 120, 50, 50), channel("port2"), range(0, 65535, 7002, 1, 1), velocity(50), text("port_2"), fontcolour(255, 255, 255, 255), colour(0, 200, 0, 255) 
 
-rslider bounds(10, 210, 100, 100), channel("knob3_1"), colour(0, 0, 255, 255), range(-5, 5, 0, 1, 0.001) increment(0.001) text("ch1")
-rslider bounds(100, 210, 100, 100),channel("knob3_2"), colour(0, 0, 255, 255), range(-5, 5, 0, 1, 0.001) increment(0.001) text("ch2")
-rslider bounds(200, 210, 100, 100), channel("knob3_3"), colour(0, 0, 255, 255), range(-5, 5, 0, 1, 0.001) increment(0.001) text("ch3")
-rslider bounds(300, 210, 100, 100), channel("knob3_4"), colour(0, 0, 255, 255), range(-5, 5, 0, 1, 0.001) increment(0.001) text("ch4")
-rslider bounds(400, 210, 100, 100), channel("knob3_5"), colour(0, 0, 255, 255), range(-5, 5, 0, 1, 0.001) increment(0.001) text("ch5")
-rslider bounds(500, 210, 100, 100), channel("knob3_6"), colour(0, 0, 255, 255), range(-5, 5, 0, 1, 0.001) increment(0.001) text("ch6")
-rslider bounds(600, 210, 100, 100), channel("knob3_7"), colour(0, 0, 255, 255), range(-5, 5, 0, 1, 0.001) increment(0.001) text("ch7")
-rslider bounds(700, 210, 100, 100), channel("knob3_8"), colour(0, 0, 255, 255), range(-5, 5, 0, 1, 0.001) increment(0.001) text("ch8")
+rslider bounds(10, 210, 100, 100), channel("knob3_1"), colour(0, 0, 255, 255), range(0, 10, 0, 1, 0.001) increment(0.001) text("ch1")
+rslider bounds(100, 210, 100, 100),channel("knob3_2"), colour(0, 0, 255, 255), range(0, 10, 0, 1, 0.001) increment(0.001) text("ch2")
+rslider bounds(200, 210, 100, 100), channel("knob3_3"), colour(0, 0, 255, 255), range(0, 10, 0, 1, 0.001) increment(0.001) text("ch3")
+rslider bounds(300, 210, 100, 100), channel("knob3_4"), colour(0, 0, 255, 255), range(0, 10, 0, 1, 0.001) increment(0.001) text("ch4")
+rslider bounds(400, 210, 100, 100), channel("knob3_5"), colour(0, 0, 255, 255), range(0, 10, 0, 1, 0.001) increment(0.001) text("ch5")
+rslider bounds(500, 210, 100, 100), channel("knob3_6"), colour(0, 0, 255, 255), range(0, 10, 0, 1, 0.001) increment(0.001) text("ch6")
+rslider bounds(600, 210, 100, 100), channel("knob3_7"), colour(0, 0, 255, 255), range(0, 10, 0, 1, 0.001) increment(0.001) text("ch7")
+rslider bounds(700, 210, 100, 100), channel("knob3_8"), colour(0, 0, 255, 255), range(0, 10, 0, 1, 0.001) increment(0.001) text("ch8")
 nslider bounds(810, 220, 50, 50), channel("port3"), range(0, 65535, 7004, 1, 1), velocity(50), text("port_3"), fontcolour(255, 255, 255, 255), colour(0, 0, 200, 255) 
 
-rslider bounds(10, 310, 100, 100), channel("knob4_1"), colour(255, 0, 255, 255), range(-5, 5, 0, 1, 0.001) increment(0.001) text("ch1")
-rslider bounds(100, 310, 100, 100),channel("knob4_2"), colour(255, 0, 255, 255), range(-5, 5, 0, 1, 0.001) increment(0.001) text("ch2")
-rslider bounds(200, 310, 100, 100), channel("knob4_3"), colour(255, 0, 255, 255), range(-5, 5, 0, 1, 0.001) increment(0.001) text("ch3")
-rslider bounds(300, 310, 100, 100), channel("knob4_4"), colour(255, 0, 255, 255), range(-5, 5, 0, 1, 0.001) increment(0.001) text("ch4")
-rslider bounds(400, 310, 100, 100), channel("knob4_5"), colour(255, 0, 255, 255), range(-5, 5, 0, 1, 0.001) increment(0.001) text("ch5")
-rslider bounds(500, 310, 100, 100), channel("knob4_6"), colour(255, 0, 255, 255), range(-5, 5, 0, 1, 0.001) increment(0.001) text("ch6")
-rslider bounds(600, 310, 100, 100), channel("knob4_7"), colour(255, 0, 255, 255), range(-5, 5, 0, 1, 0.001) increment(0.001) text("ch7")
-rslider bounds(700, 310, 100, 100), channel("knob4_8"), colour(255, 0, 255, 255), range(-5, 5, 0, 1, 0.001) increment(0.001) text("ch8")
+rslider bounds(10, 310, 100, 100), channel("knob4_1"), colour(255, 0, 255, 255), range(0, 10, 0, 1, 0.001) increment(0.001) text("ch1")
+rslider bounds(100, 310, 100, 100),channel("knob4_2"), colour(255, 0, 255, 255), range(0, 10, 0, 1, 0.001) increment(0.001) text("ch2")
+rslider bounds(200, 310, 100, 100), channel("knob4_3"), colour(255, 0, 255, 255), range(0, 10, 0, 1, 0.001) increment(0.001) text("ch3")
+rslider bounds(300, 310, 100, 100), channel("knob4_4"), colour(255, 0, 255, 255), range(0, 10, 0, 1, 0.001) increment(0.001) text("ch4")
+rslider bounds(400, 310, 100, 100), channel("knob4_5"), colour(255, 0, 255, 255), range(0, 10, 0, 1, 0.001) increment(0.001) text("ch5")
+rslider bounds(500, 310, 100, 100), channel("knob4_6"), colour(255, 0, 255, 255), range(0, 10, 0, 1, 0.001) increment(0.001) text("ch6")
+rslider bounds(600, 310, 100, 100), channel("knob4_7"), colour(255, 0, 255, 255), range(0, 10, 0, 1, 0.001) increment(0.001) text("ch7")
+rslider bounds(700, 310, 100, 100), channel("knob4_8"), colour(255, 0, 255, 255), range(0, 10, 0, 1, 0.001) increment(0.001) text("ch8")
 nslider bounds(810, 320, 50, 50), channel("port4"), range(0, 65535, 7006, 1, 1), velocity(50), text("port_4"), fontcolour(255, 255, 255, 255), colour(200, 0, 200, 255) 
 
 </Cabbage>
@@ -82,7 +82,7 @@ instr 1
     kData3_6 chnget "knob3_6"
     kData3_7 chnget "knob3_7"
     kData3_8 chnget "knob3_8"
-    kPort1 chnget "port3"
+    kPort3 chnget "port3"
 
     kData4_1 chnget "knob4_1"
     kData4_2 chnget "knob4_2"
