@@ -1,5 +1,5 @@
 <Cabbage>
-form caption("OSCSend"), size(410, 300), pluginid("band"), guirefresh(10)
+form caption("OSCSend"), size(410, 300), pluginid("oscsend"), guirefresh(10)
 
 rslider bounds(10, 10, 100, 100), channel("knob1"), colour(255, 0, 0, 255), range(-5, 5, 0, 1, 0.01) increment(0.001) text("ch1")
 rslider bounds(100, 10, 100, 100),channel("knob2"), colour(255, 0, 0, 255), range(-5, 5, 0, 1, 0.01) increment(0.001) text("ch2")
