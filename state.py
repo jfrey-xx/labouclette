@@ -175,8 +175,11 @@ class State(object):
         self._set_pattern(pattern, True)
         return event
         
-    def setEnable(self, flag):
-        """ set this state alive or not, return events to execute, if any"""
+    def setEnable(self, flag, val=-1):
+        """
+        set this state alive or not, return events to execute, if any
+        val: associated note velocity or CC value, if any (used in overload Modifier)
+        """
         self.enable = flag
         # safe current patterns if case of restore
         if not flag and self.restore_on:
@@ -224,7 +227,9 @@ class Modifier(State):
         velocity: velocity to use for each action (default 127)
         osc_activate, osc_deactivate: address to send a signal to for each state (NB: remoteOSC should be set)
         osc_arg: what to send along osc message (default: 1)
-        osc_arg_val: if True, will send the associated CC value / velocity
+        osc_send_val: if True, will send the associated CC value / velocity to osc message (after osc_arg)
+        cc_relative: if True, will consider CC relative type one and transform value accordingly, using osc_activate command for increments and osc_deactivate for decrements
+
         """
         # setting new keywods
         self.note_activate = kwargs.pop('note_activate', -1)
@@ -233,13 +238,14 @@ class Modifier(State):
         self.osc_activate = kwargs.pop('osc_activate', None)
         self.osc_deactivate = kwargs.pop('osc_deactivate', None)
         self.osc_arg = kwargs.pop('osc_arg', 1)
-
+        self.osc_send_val = kwargs.pop('osc_send_val', False)
+        self.cc_relative = kwargs.pop('cc_relative', False)
         
         # passing the rest to upper class
         super(Modifier, self).__init__(*args, **kwargs)        
         print("init modifier with activate " + str(self.note_activate) + " and deactivate " + str(self.note_deactivate))
         
-    def _action(self, note, action_name, osc_address, osc_arg):
+    def _action(self, note, action_name, osc_address, osc_arg, val = -1):
         """ actually create the note and send OSC message"""
         print("Modifier " + self.name + " action " + str(action_name))
         if note > 0:
@@ -248,22 +254,38 @@ class Modifier(State):
             print("Error: associated note not set")
         
         if self.remoteOSC != None and osc_address != None:
-            self.remoteOSC.command_raw(osc_address, osc_arg)
+            if self.osc_send_val:
+                self.remoteOSC.command_raw(osc_address, osc_arg, val)
+            else:
+                self.remoteOSC.command_raw(osc_address, osc_arg)
+
         
-    def setEnable(self, flag):
-        """ overload State.setEnable to also send associated note """
+    def setEnable(self, flag, val=-1):
+        """
+        overload State.setEnable to also send associated note 
+        val: associated note velocity or CC value, if any (used in overload Modifier)
+        """
         # first inform upper class and gather results
         events = super(Modifier, self).setEnable(flag)
         
         # if there was no events, create list
         if events == None:
             events = []
-            
+        
+        # ugly hack, special case with CC relative, value will always be positive
+        # increments: the more the speed, the higher value above 64
+        # decrements: the more the speed, the higher value above 0
+        if self.cc_relative:
+            if val > 64:
+                val = val - 64
+            else:
+                flag = False
+        
         # second, check associated note
         if flag:
-            event = self._action(self.note_activate, "note_on", self.osc_activate, self.osc_arg)
+            event = self._action(self.note_activate, "note_on", self.osc_activate, self.osc_arg, val)
         else:
-            event = self._action(self.note_deactivate, "note_off", self.osc_deactivate, self.osc_arg)
+            event = self._action(self.note_deactivate, "note_off", self.osc_deactivate, self.osc_arg, val)
         
         if event != None:
             events.append(event)
@@ -300,14 +322,18 @@ def toggle_state(event, list_states, checkTC = False):
                 return event
         print("State: " + state.name)
         
+        # retrieve velocity / CC value
+        if (checkTC):
+            event_val =  event.velocity
+        else:
+            event_val = event.value
         # toggle state and return associated events
-        if (checkTC and event.velocity != 0) or (not checkTC and event.value != 0):
+        if event_val != 0:
             print("set to True")
-            return state.setEnable(True)
-
+            return state.setEnable(True, event_val)
         else:
            print("set to False")
-           return state.setEnable(False)
+           return state.setEnable(False, event_val)
     # note TC could also get noteoff, we want to discard that
     elif checkTC and event.type is NOTEOFF:
         return

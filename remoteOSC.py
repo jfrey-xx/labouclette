@@ -53,15 +53,15 @@ class RemoteOSC(liblo.ServerThread):
         print("Sending  value [" + str(com) + "] to " + msg)
         liblo.send(self.target, msg, com)
 
-    def command_raw(self, address, msg):
+    def command_raw(self, address, *args):
         """
-        Even lower level, send directly msg to address
+        Even lower level, send directly command and optionnal messages to address
         """
         if not self.client_active:
             print("Client not init, won't send OSC message.")
             return
-        print("Sending  value [" + str(msg) + "] to " + address)
-        liblo.send(self.target, address, msg)
+        print("Sending  value [" + str(args) + "] to " + address)
+        liblo.send(self.target, address, *args)
         
     @liblo.make_method(None, None)
     def callback(self, path, args):

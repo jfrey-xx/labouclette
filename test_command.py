@@ -72,13 +72,17 @@ replace_modifier = state.Modifier("replace", 19, note_activate = 49, note_deacti
 snapshot_modifier = state.Modifier("snapshot", 20, note_activate = 52, note_deactivate = 53)
 
 # control for zynthian
-zynthian_button_1 = state.Modifier("zynthian_but0", 17, remoteOSC = zynthianOSC, osc_activate = "/zyn/press", osc_deactivate = "/zyn/release", osc_arg = 1)
-zynthian_button_2 = state.Modifier("zynthian_but0", 28, remoteOSC = zynthianOSC, osc_activate = "/zyn/press", osc_deactivate = "/zyn/release", osc_arg = 2)
-zynthian_button_3 = state.Modifier("zynthian_but0", 29, remoteOSC = zynthianOSC, osc_activate = "/zyn/press", osc_deactivate = "/zyn/release", osc_arg = 3)
-zynthian_button_4 = state.Modifier("zynthian_but0", 30, remoteOSC = zynthianOSC, osc_activate = "/zyn/press", osc_deactivate = "/zyn/release", osc_arg = 4)
+zynthian_encoder_1 = state.Modifier("zynthian_but0", 58, remoteOSC = zynthianOSC, osc_activate = "/zyn/encoder/inc", osc_deactivate = "/zyn/encoder/dec", osc_arg = 0, osc_send_val = True, cc_relative = True)
+zynthian_encoder_2 = state.Modifier("zynthian_but0", 60, remoteOSC = zynthianOSC, osc_activate = "/zyn/encoder/inc", osc_deactivate = "/zyn/encoder/dec", osc_arg = 1, osc_send_val = True, cc_relative = True)
+zynthian_encoder_3 = state.Modifier("zynthian_but0", 59, remoteOSC = zynthianOSC, osc_activate = "/zyn/encoder/inc", osc_deactivate = "/zyn/encoder/dec", osc_arg = 2, osc_send_val = True, cc_relative = True)
+zynthian_encoder_4 = state.Modifier("zynthian_but0", 61, remoteOSC = zynthianOSC, osc_activate = "/zyn/encoder/inc", osc_deactivate = "/zyn/encoder/dec", osc_arg = 3, osc_send_val = True, cc_relative = True)
+#zynthian_button_1 = state.Modifier("zynthian_but0", 17, remoteOSC = zynthianOSC, osc_activate = "/zyn/press", osc_deactivate = "/zyn/release", osc_arg = 0)
+zynthian_button_2 = state.Modifier("zynthian_but0", 28, remoteOSC = zynthianOSC, osc_activate = "/zyn/press", osc_deactivate = "/zyn/release", osc_arg = 1)
+zynthian_button_3 = state.Modifier("zynthian_but0", 29, remoteOSC = zynthianOSC, osc_activate = "/zyn/press", osc_deactivate = "/zyn/release", osc_arg = 2)
+zynthian_button_4 = state.Modifier("zynthian_but0", 30, remoteOSC = zynthianOSC, osc_activate = "/zyn/press", osc_deactivate = "/zyn/release", osc_arg = 3)
 
 # concatenate everything to check -- patterns, if any associated, will only be processed by the first active. however  something like queue (only modifier, no notes associated to patterns) will not interfere
-list_modifiers = [glaunch_modifier, glearn_modifier, queue_modifier, replace_modifier, snapshot_modifier, zynthian_button_1, zynthian_button_2, zynthian_button_3, zynthian_button_4]
+list_modifiers = [glaunch_modifier, glearn_modifier, queue_modifier, replace_modifier, snapshot_modifier, zynthian_encoder_1, zynthian_encoder_2, zynthian_encoder_3, zynthian_encoder_4, zynthian_button_2, zynthian_button_3, zynthian_button_4]
 
 # then here deal with transport controls -- NB: we don't cate about "pause"
 play_control = state.Modifier("play", 94, note_activate = 55)

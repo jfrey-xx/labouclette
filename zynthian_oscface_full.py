@@ -211,6 +211,8 @@ class MainWindow(QtGui.QMainWindow):
             sys.exit()
     
         # register method taking an int and a float
+        self.server.add_method("/zyn/encoder/inc", 'if', self.osc_encoder_inc)
+        self.server.add_method("/zyn/encoder/dec", 'if', self.osc_encoder_dec)
         self.server.add_method("/zyn/encoder", 'if', self.osc_encoder)
         self.server.add_method("/zyn/press", 'i', self.osc_press)
         self.server.add_method("/zyn/release", 'i', self.osc_release)
@@ -276,27 +278,41 @@ class MainWindow(QtGui.QMainWindow):
                 self.dec_encoder(i)
                 v+=1      
     
+    def osc_encoder_inc(self, path, args):
+        i, v = args
+        print("received inc encoder message '%s' with arguments '%d' and '%f'" % (path, i, v))
+        # increments only positives
+        if v < 0:
+            v = abs(v)
+        self.osc_encoder(path, [i, v])
+        
+    def osc_encoder_dec(self, path, args):
+        i, v = args
+        print("received dec encoder message '%s' with arguments '%d' and '%f'" % (path, i, v))
+        # decrements only negative
+        if v > 0:
+            v = -v
+        self.osc_encoder(path, [i, v])  
+        
     def inc_encoder(self, i):
-        print("inc")
         os.kill(self.zynthian_pid, signal.SIGRTMIN+2*self.rencoder_pin_a[i]+1)
-        time.sleep(0.01)
+        time.sleep(0.002)
         os.kill(self.zynthian_pid, signal.SIGRTMIN+2*self.rencoder_pin_b[i]+1)
-        time.sleep(0.01)
+        time.sleep(0.002)
         os.kill(self.zynthian_pid, signal.SIGRTMIN+2*self.rencoder_pin_a[i])
-        time.sleep(0.01)
+        time.sleep(0.002)
         os.kill(self.zynthian_pid, signal.SIGRTMIN+2*self.rencoder_pin_b[i])
-        time.sleep(0.01)
+        time.sleep(0.002)
 
     def dec_encoder(self, i):
-        print("dec")
         os.kill(self.zynthian_pid, signal.SIGRTMIN+2*self.rencoder_pin_b[i]+1)
-        time.sleep(0.01)
+        time.sleep(0.002)
         os.kill(self.zynthian_pid, signal.SIGRTMIN+2*self.rencoder_pin_a[i]+1)
-        time.sleep(0.01)
+        time.sleep(0.002)
         os.kill(self.zynthian_pid, signal.SIGRTMIN+2*self.rencoder_pin_b[i])
-        time.sleep(0.01)
+        time.sleep(0.002)
         os.kill(self.zynthian_pid, signal.SIGRTMIN+2*self.rencoder_pin_a[i])
-        time.sleep(0.01)
+        time.sleep(0.002)
 
         
     def osc_fallback(self, path, args, types, src):
