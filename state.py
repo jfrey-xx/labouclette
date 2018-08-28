@@ -223,6 +223,8 @@ class Modifier(State):
         note_activate, note_deactivate: note associated to each one of these actions (default -1)
         velocity: velocity to use for each action (default 127)
         osc_activate, osc_deactivate: address to send a signal to for each state (NB: remoteOSC should be set)
+        osc_arg: what to send along osc message (default: 1)
+        osc_arg_val: if True, will send the associated CC value / velocity
         """
         # setting new keywods
         self.note_activate = kwargs.pop('note_activate', -1)
@@ -230,12 +232,14 @@ class Modifier(State):
         self.velocity = kwargs.pop('velocity', 127)
         self.osc_activate = kwargs.pop('osc_activate', None)
         self.osc_deactivate = kwargs.pop('osc_deactivate', None)
+        self.osc_arg = kwargs.pop('osc_arg', 1)
+
         
         # passing the rest to upper class
         super(Modifier, self).__init__(*args, **kwargs)        
         print("init modifier with activate " + str(self.note_activate) + " and deactivate " + str(self.note_deactivate))
         
-    def _action(self, note, action_name, osc_address):
+    def _action(self, note, action_name, osc_address, osc_arg):
         """ actually create the note and send OSC message"""
         print("Modifier " + self.name + " action " + str(action_name))
         if note > 0:
@@ -244,7 +248,7 @@ class Modifier(State):
             print("Error: associated note not set")
         
         if self.remoteOSC != None and osc_address != None:
-            self.remoteOSC.command_raw(osc_address, 1)
+            self.remoteOSC.command_raw(osc_address, osc_arg)
         
     def setEnable(self, flag):
         """ overload State.setEnable to also send associated note """
@@ -257,14 +261,15 @@ class Modifier(State):
             
         # second, check associated note
         if flag:
-            event = self._action(self.note_activate, "note_on", self.osc_activate)
+            event = self._action(self.note_activate, "note_on", self.osc_activate, self.osc_arg)
         else:
-            event = self._action(self.note_deactivate, "note_off", self.osc_deactivate)
+            event = self._action(self.note_deactivate, "note_off", self.osc_deactivate, self.osc_arg)
         
         if event != None:
             events.append(event)
         
         return events
+
 
 def toggle_state(event, list_states, checkTC = False):
     """

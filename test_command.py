@@ -43,7 +43,10 @@ hook(
 # give feedback to possible OSC ui
 guiOSC = remoteOSC.RemoteOSC()     
 # connect to ardour OSC interface and its default OSC port
-ardourOSC = remoteOSC.RemoteOSC(client_port=3819)                
+ardourOSC = remoteOSC.RemoteOSC(client_port=3819) 
+# same for custom zynthian wrapper
+zynthianOSC = remoteOSC.RemoteOSC(client_port=4567)                
+               
         
 # HOTFIX: these notes produce sounds, go through computer keyboard instead
 launch_state = state.State("launch", 3, note_toggle = 0, totoggle = True, keyboard_toggle = False, remoteOSC = guiOSC)
@@ -67,8 +70,15 @@ queue_modifier = state.Modifier("queue", 9, note_activate = 40, note_deactivate 
 replace_modifier = state.Modifier("replace", 19, note_activate = 49, note_deactivate = 50)
 # will set the snapshot (simple) modifier
 snapshot_modifier = state.Modifier("snapshot", 20, note_activate = 52, note_deactivate = 53)
+
+# control for zynthian
+zynthian_button_1 = state.Modifier("zynthian_but0", 17, remoteOSC = zynthianOSC, osc_activate = "/zyn/press", osc_deactivate = "/zyn/release", osc_arg = 1)
+zynthian_button_2 = state.Modifier("zynthian_but0", 28, remoteOSC = zynthianOSC, osc_activate = "/zyn/press", osc_deactivate = "/zyn/release", osc_arg = 2)
+zynthian_button_3 = state.Modifier("zynthian_but0", 29, remoteOSC = zynthianOSC, osc_activate = "/zyn/press", osc_deactivate = "/zyn/release", osc_arg = 3)
+zynthian_button_4 = state.Modifier("zynthian_but0", 30, remoteOSC = zynthianOSC, osc_activate = "/zyn/press", osc_deactivate = "/zyn/release", osc_arg = 4)
+
 # concatenate everything to check -- patterns, if any associated, will only be processed by the first active. however  something like queue (only modifier, no notes associated to patterns) will not interfere
-list_modifiers = [glaunch_modifier, glearn_modifier, queue_modifier, replace_modifier, snapshot_modifier]
+list_modifiers = [glaunch_modifier, glearn_modifier, queue_modifier, replace_modifier, snapshot_modifier, zynthian_button_1, zynthian_button_2, zynthian_button_3, zynthian_button_4]
 
 # then here deal with transport controls -- NB: we don't cate about "pause"
 play_control = state.Modifier("play", 94, note_activate = 55)
